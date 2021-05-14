@@ -3,6 +3,7 @@
 
 var express = require('express');
 var mongoose = require('mongoose');
+var methodOverride = require('method-override');
 var app = express();
 
 //DB setting
@@ -25,6 +26,7 @@ app.set('view engine', 'ejs');
 app.use(express.static(__dirname+'/public'));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+app.use(methodOverride('_method'));
 
 //DB schema
 var contactSchema = mongoose.Schema({
@@ -53,6 +55,34 @@ app.get('/contacts/new', function(req,res){
 //Contacts - create
 app.post('/contacts', function(req,res){
     Contact.create(req.body, function(err, contact){
+        if(err) return res.json(err);
+        res.redirect('/contacts');
+    });
+});
+//Contacts - show
+app.get('/contacts/:id', function(req,res){
+    Contact.findOne({_id:req.params.id}, function(err,contact){
+        if(err) return res.json(err);
+        res.render('contacts/show', {contact:contact});
+    });
+});
+//Contacts - edit
+app.get('/contacts/:id/edit', function(req, res){
+    Contact.findOne({_id:req.params.id}, function(err, contact){
+        if(err) return res.json(err);
+        res.render('contacts/edit', {contact:contact});
+    });
+});
+// Contacts - update 
+app.put('/contacts/:id', function(req, res){
+    Contact.findOneAndUpdate({_id:req.params.id}, req.body, function(err, contact){
+      if(err) return res.json(err);
+      res.redirect('/contacts/'+req.params.id);
+    });
+  });
+//Contacts - destroy
+app.delete('/contacts/:id', function(req,res){
+    Contact.deleteOne({_id:req.params.id}, function(err){
         if(err) return res.json(err);
         res.redirect('/contacts');
     });
